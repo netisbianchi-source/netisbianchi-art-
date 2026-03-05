@@ -53,7 +53,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        h2 { border-left: 5px solid var(--gold); padding-left: 15px; color: var(--dark-bg); }
+        h2 { border-left: 5px solid var(--gold); padding-left: 15px; color: var(--dark-bg); margin-bottom: 20px; }
 
         .price-val { color: var(--gold); font-weight: 800; }
 
@@ -96,6 +96,7 @@
 
         .submit-btn:hover { background: var(--gold); color: var(--dark-bg); }
         footer { text-align: center; padding: 40px; color: #999; }
+        .notice-box { background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 0.9rem; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -125,16 +126,21 @@
 
         <section class="section">
             <h2>填寫委託需求</h2>
-            <form action="mailto:NetisBianchi@gmail.com" method="post" enctype="text/plain" id="commissionForm">
+            <form onsubmit="sendEmail(event)" id="commissionForm">
                 
                 <div class="form-group">
                     <label>您的稱呼：</label>
-                    <input type="text" name="稱呼" required>
+                    <input type="text" id="userName" name="稱呼" required placeholder="請輸入稱呼">
+                </div>
+
+                <div class="form-group">
+                    <label>電子信箱 (E-mail)：</label>
+                    <input type="email" id="userEmail" name="信箱" required placeholder="NetisBianchi@gmail.com">
                 </div>
 
                 <div class="form-group">
                     <label>選擇委託方案：</label>
-                    <select name="方案" id="planSelect" onchange="calculate()">
+                    <select id="planSelect" onchange="calculate()">
                         <option value="5500">精緻全彩版（無/單色背景）- $5,500</option>
                         <option value="10000">精緻全彩版 + 複雜場景 - $10,000</option>
                     </select>
@@ -142,7 +148,7 @@
 
                 <div class="form-group">
                     <label>適用優惠方案：</label>
-                    <select name="優惠" id="discountSelect" onchange="calculate()">
+                    <select id="discountSelect" onchange="calculate()">
                         <option value="4000">一般報價 (加購主體 $4,000/位)</option>
                         <option value="3500">情侶/人寵甜蜜優惠 (加購主體 $3,500/位)</option>
                     </select>
@@ -150,7 +156,7 @@
 
                 <div class="form-group">
                     <label>總主體數量 (含第一位)：</label>
-                    <select name="數量" id="countSelect" onchange="calculate()">
+                    <select id="countSelect" onchange="calculate()">
                         <option value="1">1 位</option>
                         <option value="2">2 位</option>
                         <option value="3">3 位</option>
@@ -160,13 +166,20 @@
 
                 <div class="form-group">
                     <label>背景與情緒需求：</label>
-                    <textarea name="需求內容" rows="3" placeholder="例如：暖色調電影感、請參考附件照片..."></textarea>
+                    <textarea id="userRequirement" name="需求內容" rows="3" placeholder="例如：1人1狗、溫暖色調、希望還原某時刻..."></textarea>
                 </div>
 
                 <div class="calc-display">
                     預計委託總額<br>
                     TWD $ <span id="totalPrice">5,500</span>
                     <span class="duration-tag" id="durationText">預估製作工期：約 3-5 週</span>
+                </div>
+
+                <div class="notice-box">
+                    <strong>【小提醒】</strong><br>
+                    * 確認委託後需支付 50% 定金。<br>
+                    * 報價含 3 次微調，定案後不接受大幅更改。<br>
+                    * 點擊送出後請於郵件中<strong>附加照片檔案</strong>。
                 </div>
 
                 <button type="submit" class="submit-btn">送出委託詢問</button>
@@ -176,27 +189,58 @@
     </div>
 
     <footer>
-        Instagram: @1010_netis | Email: NetisBianchi@gmail.com<br>
+        <p>Instagram: <a href="https://www.instagram.com/1010_netis/" target="_blank" style="color:var(--gold)">@1010_netis</a></p>
+        <p>Email: NetisBianchi@gmail.com</p>
         &copy; 2024 Netis 奈逖斯
     </footer>
 
     <script>
+        // 金額與工期即時計算
         function calculate() {
             const planPrice = parseInt(document.getElementById('planSelect').value);
             const addPrice = parseInt(document.getElementById('discountSelect').value);
             const count = parseInt(document.getElementById('countSelect').value);
             
-            // 金額計算
             const total = planPrice + ((count - 1) * addPrice);
             document.getElementById('totalPrice').innerText = total.toLocaleString();
 
-            // 工期判斷
             const durationText = document.getElementById('durationText');
             if (count === 1) {
                 durationText.innerText = "預估製作工期：約 3-5 週";
             } else {
                 durationText.innerText = "預估製作工期：約 5-7 週 (多主體需時較長)";
             }
+        }
+
+        // 郵件發送處理 (解決中文亂碼)
+        function sendEmail(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const plan = document.getElementById('planSelect').selectedOptions[0].text;
+            const discount = document.getElementById('discountSelect').selectedOptions[0].text;
+            const count = document.getElementById('countSelect').value;
+            const total = document.getElementById('totalPrice').innerText;
+            const requirement = document.getElementById('userRequirement').value;
+            const duration = document.getElementById('durationText').innerText;
+
+            const subject = encodeURIComponent(`繪畫委託詢問 - ${name}`);
+            const body = encodeURIComponent(
+                `Netis 奈逖斯您好，我想詢問繪畫委託：\n\n` +
+                `● 您的稱呼：${name}\n` +
+                `● 聯絡信箱：${email}\n` +
+                `● 委託方案：${plan}\n` +
+                `● 優惠方案：${discount}\n` +
+                `● 主體數量：${count}\n` +
+                `● 需求描述：${requirement}\n` +
+                `● 預計總額：TWD $${total}\n` +
+                `● ${duration}\n\n` +
+                `----------------------------------\n` +
+                `（請記得在此郵件中附件您的參考照片，方便老師評估，謝謝！）`
+            );
+
+            window.location.href = `mailto:NetisBianchi@gmail.com?subject=${subject}&body=${body}`;
         }
     </script>
 
